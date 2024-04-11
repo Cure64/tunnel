@@ -1,0 +1,1838 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Tunnel</title>
+	<script src="https://kit.fontawesome.com/e897e5d5dc.js" crossorigin="anonymous"></script>
+	<style>
+		@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&family=Lexend&family=Source+Code+Pro&display=swap');
+		html {
+			height: 100%;
+		}
+		html, body {
+			background-color: black;
+			color: #33a34f;
+			width: 100%;
+			margin: 0;
+			box-sizing: border-box;
+			font-family: 'Consolas', monospace;
+		}
+		body {
+			min-height: 100%;
+			display: flex;
+		}
+
+		#commandLine {
+			tab-size: 4;
+			padding: 8px 8px 64px 18px;
+			white-space: normal;
+			margin: 0;
+			flex-grow: 1;
+			cursor: text;
+			font-size: 11pt;
+			color: #33a34f;
+		}
+
+		*::selection {
+			background-color: #1dc748;
+			color: black;
+		}
+
+		#commandLine * {
+			white-space: pre;
+			font-size: inherit;
+		}
+
+		#commandLine .line {
+			height: fit-content;
+			display: flex;
+			width: 100%;
+			font-size: inherit;
+		}
+
+		#commandLine .input {
+			display: inline;
+			resize: none;
+			width: 100%;
+			background: transparent;
+			color: inherit;
+			border: none;
+			outline: none;
+			font-family: monospace;
+			padding: 0;
+			cursor: text;
+			font-size: inherit;
+		}
+
+
+
+
+		#grid {
+			font-family: monospace;
+			position: fixed;
+			user-select: none;
+			display: grid;
+			font-size: 9px;
+			border: none;
+			border-top: 3px double #2e703f;
+			padding-top: 4px;
+			background-color: black;
+			color: transparent;
+		}
+
+		#grid .grid-close {
+			position: absolute;
+			background-color: black;
+			outline: #2e703f solid 1px;
+			color: #2e703f;
+			width: 9px;
+			height: 9px;
+			z-index: 2;
+			font-size: 10pt;
+			cursor: pointer;
+			font-weight: bold;
+			top: -2px;
+			right: 1px;
+			display: flex;
+			flex-wrap: nowrap;
+			justify-content: center;
+			align-items: center;
+		}
+		
+		#grid:before {
+			content: "";
+			position: absolute;
+			top: 1px;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			border-top: 3px double #2e703f;
+		}
+		
+		#grid:after {
+			content: "";
+			position: absolute;
+			top: 5px;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			border-top: 3px double #2e703f;
+		}
+		
+		.row {
+			display: block;
+			height: 9px;
+			margin: 0;
+			border: none;
+			margin-top: 2px;
+			margin-bottom: 2px;
+		}
+		
+		.cell {
+			text-align: center;
+			padding: 0;
+			border: none;
+			border: 2px solid black;
+			display: inline-block;
+			box-sizing: content-box;
+			background-color: #0e1410;
+			width: 7px;
+			height: 9px;
+		}
+		
+		@keyframes fadeoutnormal {
+			0% {color: #2e703f;}
+			100% {color: transparent;}
+		}
+
+		@keyframes fadeouthover {
+			0% {
+				color: #22c94d;
+				text-shadow: #00ff00 0px 0 10px, #00ff00 0px 0 4px;
+			}
+			100% {
+				color: transparent;
+				text-shadow: none;
+			}
+		}
+
+		#splitContainer {
+			display: flex;
+			width: 100%;
+			min-height: 100%;
+			margin: 0;
+			box-sizing: border-box;
+			padding-top: 15px;
+		}
+
+		.survey {
+			position: fixed;
+			text-align: center;
+			padding: 0;
+			bottom: 0;
+			right: 0;
+			width: 240px;
+			height: fit-content;
+			border: 1px solid #2e703f;
+			background-color: black;
+			cursor: default;
+			font-size: 11pt;
+		}
+
+		.survey u {
+			cursor: pointer;
+		}
+
+		.survey .survey-close {
+			display: flex;
+			flex-wrap: nowrap;
+			justify-content: center;
+			align-items: center;
+			position: absolute;
+			top: 0;
+			right: 0;
+			padding: 2px;
+			width: 12px;
+			height: 12px;
+			font-size: 14pt;
+			outline: #2e703f solid 1px;
+			cursor: pointer;
+		}
+
+		.topbar {
+			position: fixed;
+			z-index: 3;
+			height: 20px;
+			width: 100%;
+			box-sizing: border-box;
+			top: 0;
+			padding: 0 150px;
+			background-color: black;
+			border-bottom: 1px solid #2e703f;
+		}
+
+		.topbar #battery {
+			float: right;
+		}
+
+		.topbar #battery-charging {
+			font-size: 10pt;
+		}
+		
+		.left {
+			overflow: auto;
+			display: absolute;
+			min-width: 500px;
+			width: 50%;
+			max-width: 100%;
+			min-height: 100%;
+			box-sizing: border-box;
+			padding-top: 0;
+			/* border-right: 5px solid #217737; */
+			box-shadow: -5px 0px 11px 9px rgba(33, 119, 55, 0.75), 2px 0px 11px 11px rgba(33, 119, 55, 0.25);
+		}
+
+
+
+		
+		.document ul, .document ol {
+			text-align: left;
+			padding: 0;
+			margin: 0 auto;
+			padding-left: 30%;
+			padding-right: 20%;
+		}
+		
+		.document li {
+			margin-bottom: 10px;
+			line-height: 1.25em;
+			padding-left: 1em;
+			text-indent: -1em;
+		}
+
+		.document li::marker {
+			font-weight: bold;
+		}
+	
+		.document {
+			text-align: center;
+			position: relative;
+			margin: 0;
+			padding-bottom: 25px;
+			overflow-x: hidden;
+			color: #33a34f;
+			box-sizing: border-box;
+			padding-top: 10px;
+			max-width: 100%;
+			height: 100%;
+		}
+
+		::-webkit-scrollbar {
+			width: 15px;
+			background-color: transparent;
+		}
+
+		::-webkit-scrollbar-thumb {
+			background-color: rgba(33, 119, 55, 0.7);
+			border-right: 3px solid black;
+			border-left: 3px solid black;
+			border-radius: 6px;
+		}
+
+		::-webkit-scrollbar-thumb:hover {
+			background-color: rgba(23, 109, 45, 0.7);
+		}
+
+		::-webkit-scrollbar-thumb:active {
+			background-color: rgba(13, 99, 35, 0.7);
+		}
+
+		.document input[type="text"], .document input[type="number"] {
+			background-color: transparent;
+			font-family: inherit;
+			border: 1px solid #33a34f;
+			border-radius: 5px;
+			color: #33a34f;
+			display: inline-block;
+			box-sizing: border-box;
+			padding: 4px 10px;
+			width: 230px;
+			font-size: 15px;
+			height: 30px;
+			
+		}
+
+		.document input[type=checkbox] {
+			accent-color: #217737;
+			/* filter: brightness(0) saturate(100%) invert(46%) sepia(23%) saturate(1141%) hue-rotate(83deg) brightness(108%) contrast(94%);
+			background-clip: padding-box;
+			width: 15px;
+			height: 15px;
+			background-color: black;
+			clip-path: polygon(0% 0%, 0% 100%, 13% 100%, 13% 13%, 87% 13%, 87% 87%, 13% 87%, 13% 100%, 100% 100%, 100% 0%); */
+		}
+
+		.document input[type=checkbox]:checked {
+			accent-color: #0b4419;
+			/* filter: brightness(0) saturate(100%) invert(46%) sepia(23%) saturate(1141%) hue-rotate(83deg) brightness(108%) contrast(94%);
+			clip-path: url(#checked); */
+		}
+
+		.document input[type="text"]::placeholder, .document input[type="number"]::placeholder {
+			color: #759b7f;
+		}
+
+		.document h1 {
+			font-size: 40px;
+		}
+
+		.document button {
+			background-color: transparent;
+			font-family: inherit;
+			border: 1px solid #33a34f;
+			color: #33a34f;
+			padding: 4px 10px;
+			font-size: 15px;
+			border-radius: 5px;
+			cursor: pointer;
+			height: 30px;
+		}
+
+		.document u {
+			font-weight: bold;
+			cursor: pointer;
+		}
+
+		#removeHistory {
+			border: 3px solid #FF4E4E;
+			color: #FF4E4E;
+			margin-top: 5px;
+		}
+		
+		.info {
+			color: #33a34f;
+		}
+
+		.warning {
+			color: orange;
+		}
+
+		.fatal-warning {
+			color: #ff1111;
+		}
+
+		.document button:disabled {
+			color: gray;
+			border-color: gray;
+			cursor: not-allowed;
+		}
+
+		.document button:disabled::selection {
+			background-color: gray;
+			color: black;
+		}
+
+		.document input[type="text"]:disabled, .document input[type="number"]:disabled {
+			border-color: gray;
+			color: gray;
+		}
+
+		#main3, #main4, #main6 {
+			padding-left: 50px;
+			padding-right: 50px;
+		}
+
+		#main3 p, #main6 p {
+			text-align: left;
+		}
+
+		#main3 p {
+			line-height: 1.5;
+		}
+
+		#main3 h2 {
+			text-decoration: underline;
+		}
+		.info-line {
+			width: calc(100% - (8px*2));
+			position: relative;
+			-webkit-transition: all 1s;
+			-o-transition: all 1s;
+			transition: all 1s;
+			display: block;
+			text-align: center;
+			overflow: visible;
+			position: relative;
+		}
+			
+		.info-line i {
+			display: inline-block;
+			position: relative;
+			-webkit-transition: all 1s ease 0s;
+			-o-transition: all 1s ease 0s;
+			transition: all 1s ease 0s;
+			overflow: visible;
+		}
+			
+		.info-line i:after {
+			font-family: 'Consolas', monospace;
+			pointer-events: none;
+			font-style: normal;
+			font-weight: normal;
+			content: attr(aria-valuetext);
+			position: absolute;
+			opacity: 0;
+			overflow: visible;
+			width: 340px;
+			clip-path: border-box xywh(0 0 0% 100%);
+			-webkit-clip-path: border-box xywh(0 0 0% 100%);
+			top: 0;
+			right: -15px;
+			left: 15px;
+			-webkit-transition: all 0.8s ease-out 0s;
+			-o-transition: all 0.8s ease-out 0s;
+			transition: all 0.8s ease-out 0s;
+		}
+			
+		.info-line i:hover {
+			padding-right: 340px;
+		}
+			
+		.info-line i:hover:after {
+			opacity: 1;
+			right: 0;
+			padding-left: 0px;
+			clip-path: border-box xywh(0 0 100% 100%);
+			-webkit-clip-path: border-box xywh(0 0 100% 100%);
+		}
+
+		.document code {
+			font-size: 12pt;
+			padding: 0 2px;
+			display: inline;
+			background-color: black;
+		}
+
+
+
+
+		.snake-row {
+			display: flex;
+		}
+
+		.snake-cell {
+			box-sizing: border-box;
+		}
+
+		.snake-cell::after {
+			content: '\00a0\00a0';
+			display: block;
+			text-align: center;
+		}
+
+		.snake-head.sleft::after {
+			content: '<\00a0' !important;
+		}
+		.snake-head.right::after {
+			content: '>\00a0' !important;
+		}
+		.snake-head.down::after {
+			content: 'v\00a0' !important;
+		}
+		.snake-head.up::after {
+			content: 'ʌ\00a0' !important;
+		}
+		.snake-head.undefined::after {
+			content: '*\00a0' !important;
+		}
+		.snake-head::after {
+			content: '*\00a0' !important;
+		}
+
+		.snake-segment.sleft::after {
+			content: '―\00a0';
+		}
+		.snake-segment.right::after {
+			content: '―\00a0';
+		}
+		.snake-segment.down::after {
+			content: '|\00a0';
+		}
+		.snake-segment.up::after {
+			content: '|\00a0';
+		}
+		.snake-segment.upleft::after {
+			content: '╲\00a0';
+		}
+		.snake-segment.downright::after {
+			content: '╲\00a0';
+		}
+		.snake-segment.downleft::after {
+			content: '╱\00a0';
+		}
+		.snake-segment.upright::after {
+			content: '╱\00a0';
+		}
+		.snake-segment.undefined::after {
+			content: '*\00a0';
+		}
+		.snake-segment::after {
+			content: '*\00a0';
+		}
+
+		.food::after {
+			content: '@\00a0';
+		}
+
+
+
+
+		.selectPoint * {
+			cursor: crosshair !important;
+		}
+
+		.maze-container {
+			display: grid;
+			grid-template-columns: repeat(32, 2ch);
+			grid-template-rows: repeat(32, 12pt);
+			padding: 3pt 0.5ch;
+			width: fit-content;
+			cursor: default;
+			border: 1px solid #33a34f;
+		}
+		.maze-cell {
+			user-select: none;
+			cursor: pointer;
+		}
+
+		.maze-cell::after {
+			content: '\00a0\00a0';
+		}
+
+		.maze-cell:hover::after {
+			content: '+\00a0';
+		}
+
+		.maze-wall::after {
+			content: '+\00a0';
+		}
+		.maze-path::after {
+			content: '#\00a0';
+		}
+		.maze-start::after {
+			content: 'S\00a0' !important;
+		}
+		.maze-end::after {
+			content: 'E\00a0' !important;
+		}
+	</style>
+</head>
+<body>
+	<div class="topbar"><span id="time">00:00 AM</span><span id="battery"><i class="fa-solid fa-bolt" id="battery-charging" style="display: none"></i> <span id="battery-percentage">100</span>% <i class="fa-solid fa-battery-full" id="battery-icon"></i></span></div>
+	<div id="splitContainer">
+		<div class="left">
+		
+			<div id="main1" class="document">
+				<span style="position: absolute;top: 15px;right: 15px;word-break: keep-all;text-wrap: nowrap;word-wrap: keep-all;white-space: nowrap;text-align: left;text-decoration: underline;cursor: pointer;" onclick="switchPage(5)">Coming soon!</span>
+				<span style="position: absolute;bottom: 15px;right: 15px;word-break: keep-all;text-wrap: nowrap;word-wrap: keep-all;white-space: nowrap;text-align: left;text-decoration: underline;cursor: help;" onclick="switchPage(3)">Help</span>
+				<span style="position: fixed;left: 15px;bottom: 15px;word-break: keep-all;word-wrap: keep-all;text-wrap: nowrap;white-space: nowrap;text-align: left;text-decoration: underline;cursor: pointer;background-color: black;" onclick="blank('https://docs.google.com/forms/d/e/1FAIpQLSd0440qvWUISWLiIpu85QCVr6_JbK0S47ewDv0y2TEti6KhAQ/viewform?usp=sf_link')"><i class="fa-solid fa-bug"></i> Report</span>
+				<h1>Tunnel</h1>
+				<p>A tool for avoiding internet censorship.</p>
+				<div id="abContainer">
+					<h2>about:blank launcher</h2>
+					<input type="text" id="urlInput" type="text" autocomplete="off" placeholder="Enter custom URL"/>
+					<button id="confirm"><i class="fas fa-check"></i> Confirm</button>
+					<button id="changeUrl" style="display: none;"><i class="fas fa-pen"></i> Change</button>
+					<button disabled id="launch"><i class="fas fa-rocket"></i> Launch</button><br><br>
+					<div class="info-line"><i class="info fa fa-info-circle" aria-valuetext="This will open a link without putting it in your search history."></i></div>
+				</div>
+				<!-- <br> -->
+				<div id="proxyContainer">
+					<h2>Web proxy launcher</h2>
+					<input type="number" id="proxyInput" autocomplete="off" min="0" max="100" placeholder="Enter proxy ID (0-${PROXYURLs.length})"/>
+					<button id="confirmProxyID"><i class="fas fa-check"></i> Confirm</button>
+					<button id="changeProxyID" style="display: none;"><i class="fas fa-pen"></i> Change</button>
+					<button disabled id="launchProxyID"><i class="fas fa-rocket"></i> Launch</button><br><br>
+					<div class="info-line"><i class="info fa fa-info-circle" aria-valuetext="This will open a web proxy, which allows you to surf the web freely without restrictions."></i></div>
+				</div>
+				<br>
+				<div id="youtubeContainer">
+					<h2>Piped launcher</h2>
+					<input type="number" id="YTInput" autocomplete="off" min="0" max="100" placeholder="Enter Piped ID (0-${YTURLs.length})"/>
+					<button id="confirmYTID"><i class="fas fa-check"></i> Confirm</button>
+					<button id="changeYTID" style="display: none;"><i class="fas fa-pen"></i> Change</button>
+					<button disabled id="launchYTID"><i class="fas fa-rocket"></i> Launch</button>
+					<br><br>
+					<div class="info-line"><i class="info fa fa-info-circle" aria-valuetext="This will open piped, which is a privacy alternative to YouTube."></i></div>
+				</div>
+			</div>
+
+			<div id="main3" class="document" style="display:none;">
+				<span style="position: absolute;top: 15px;right: 15px;word-break: keep-all;text-wrap: nowrap;word-wrap: keep-all;white-space: nowrap;text-align: left;text-decoration: underline;cursor: pointer;" onclick="switchPage(5)">Coming soon!</span>
+				<span style="position: absolute;left: 15px;top: 15px;word-break: keep-all;word-wrap: keep-all;text-wrap: nowrap;white-space: nowrap;text-align: left;text-decoration: underline;cursor: pointer;" onclick="switchPage(1)">&lt; Tunnel</span>
+				<span style="position: fixed;left: 15px;bottom: 15px;word-break: keep-all;word-wrap: keep-all;text-wrap: nowrap;white-space: nowrap;text-align: left;text-decoration: underline;cursor: pointer;background-color: black;" onclick="blank('https://docs.google.com/forms/d/e/1FAIpQLSd0440qvWUISWLiIpu85QCVr6_JbK0S47ewDv0y2TEti6KhAQ/viewform?usp=sf_link')"><i class="fa-solid fa-bug"></i> Report</span>
+				<h1 style="margin-bottom: 0;">Tunnel</h1>
+				<span>User guide</span><br><br>
+					<h2>about:blank Launcher</h2>
+						<p>The about:blank launcher lets you open any link, without putting it in your search history. <br><br>
+						This will <b>not</b> unblock the link, it will simply just hide it from your search history.</p>
+						
+						<h3>Link format</h3>
+							<p>Links must be a valid URL, either in the format <code>https://example.com</code> or just <code>example.com</code></p><br><br>
+
+					<h2>IDs</h2>
+						<p>To open a proxy or Piped, simply input a number between <b>0</b> and the number listed in the number input. <br><br>
+						For example, the Piped input has the numbers <b>0 - 6</b>, so input a number between <b>0</b> and <b>6</b>.</p>
+						
+						<h3>Why so many numbers?</h3>
+							<p>Each number corresponds to a different link. If one of the links get blocked, there are many other links to choose from.</p>
+
+						<h3>What if a link doesn't work?</h3>
+							<p>If a link doesn't work, the most likely reason is that it just got blocked. It will be removed from the Tunnel shortly.</p>
+
+						<h3>How do I know what proxy each ID corresponds to?</h3>
+							<p><u onclick="switchPage(4)">Click here</u> for a list of IDs and what proxy they take you to.</p><br><br>
+						
+					<h2>Command Line</h2>
+						<p>The command line is an alternative way to open proxies or cloak tabs. <br><br>
+						Type help in the command line to see info on commands.</p>
+			</div>
+			<div id="main4" class="document" style="display:none;">
+				<span style="position: absolute;left: 15px;top: 15px;word-break: keep-all;word-wrap: keep-all;text-wrap: nowrap;white-space: nowrap;text-align: left;text-decoration: underline;cursor: pointer;" onclick="switchPage(1)">&lt; Tunnel</span>
+				<span style="position: fixed !important;left: 15px;bottom: 15px;word-break: keep-all;word-wrap: keep-all;text-wrap: nowrap;white-space: nowrap;text-align: left;text-decoration: underline;cursor: pointer;background-color: black;" onclick="blank('https://docs.google.com/forms/d/e/1FAIpQLSd0440qvWUISWLiIpu85QCVr6_JbK0S47ewDv0y2TEti6KhAQ/viewform?usp=sf_link')"><i class="fa-solid fa-bug"></i> Report</span>
+				<h1 style="margin-bottom: 0;">Tunnel</h1>
+				<span>ID list</span><br><br>
+			</div>
+			<div id="main5" class="document" style="display:none;">
+				<span style="position: absolute;left: 15px;top: 15px;word-break: keep-all;word-wrap: keep-all;text-wrap: nowrap;white-space: nowrap;text-align: left;text-decoration: underline;cursor: pointer;" onclick="switchPage(1)">&lt; Tunnel</span>
+				<span style="position: fixed !important;left: 15px;bottom: 15px;word-break: keep-all;word-wrap: keep-all;text-wrap: nowrap;white-space: nowrap;text-align: left;text-decoration: underline;cursor: pointer;background-color: black;" onclick="blank('https://docs.google.com/forms/d/e/1FAIpQLSd0440qvWUISWLiIpu85QCVr6_JbK0S47ewDv0y2TEti6KhAQ/viewform?usp=sf_link')"><i class="fa-solid fa-bug"></i> Report</span>
+				<h1 style="margin-bottom: 0;">Tunnel</h1>
+				<span style="text-decoration: underline;cursor: pointer;" onclick="blank('https://docs.google.com/forms/d/e/1FAIpQLSfY859Z3fncZPh4nIr497Cp6-kRaZXFtrwAWKQzAGWzs3tNqg/viewform?usp=sf_link');">Request a feature or show support for one</span><br><br>
+				<span>Coming soon</span><br><br>
+				<h2>Confirmed</h2>
+					<ul>
+						<li style="text-decoration: underline;cursor: help;" onclick="switchPage(6);">Tunnel OS</li>
+					</ul>
+
+				<h2>Maybe</h2>
+					<ul>
+						<li>Drop-down ID selection</li>
+					</ul>
+
+				<h2>Unlikely</h2>
+					<ul>
+						<li>None!</li>
+					</ul>
+			</div>
+			<div id="main6" class="document" style="display:none;">
+				<span style="position: absolute;left: 15px;top: 15px;word-break: keep-all;word-wrap: keep-all;text-wrap: nowrap;white-space: nowrap;text-align: left;text-decoration: underline;cursor: pointer;" onclick="switchPage(1)">&lt; Tunnel</span>
+				<span style="position: fixed !important;left: 15px;bottom: 15px;word-break: keep-all;word-wrap: keep-all;text-wrap: nowrap;white-space: nowrap;text-align: left;text-decoration: underline;cursor: pointer;background-color: black;" onclick="blank('https://docs.google.com/forms/d/e/1FAIpQLSd0440qvWUISWLiIpu85QCVr6_JbK0S47ewDv0y2TEti6KhAQ/viewform?usp=sf_link')"><i class="fa-solid fa-bug"></i> Report</span>
+				<h1 style="margin-bottom: 0;">Tunnel</h1>
+				<span>Tunnel OS</span><br><br>
+				<h2>What is Tunnel OS?</h2>
+					<p>Tunnel OS is going to be a complete rewrite of tunnel, designed to look and function like Tunnel. <br><br>
+					Tunnel OS will have custom proxies crafted just for Tunnel OS, ways to edit and test code, its own file system and much more!</p>
+
+				<h2>Will Tunnel still be maintained after Tunnel OS's relesase?</h2>
+					<p>Always! My goal is to keep maintaining Tunnel (and Tunnel OS) until I physically can't anymore. Maintenence on Tunnel will be slowed, and possibly halted, though only until Tunnel OS doesn't need anymore attention.</p>
+			</div>
+		</div>
+		<div id="commandLine" onclick="if(event.target.className!='line'&&document.getElementById('commandLineInput')){this.getElementsByTagName('input')[this.getElementsByTagName('input').length-1].focus();}">
+			<div id="snake-container" style="display: none;"></div>
+			<div class="maze-container" style="display: none;" id="maze"></div>
+		</div>
+	</div>
+	<div class="survey">
+		<div class="survey-close" onclick="this.parentElement.remove();">&times;</div>
+		<span onclick="blank('https://docs.google.com/forms/d/e/1FAIpQLSf3csAgAXMkRhL921APD9WBLENoxHGCWN0C_JKRExRVb0hXRw/viewform')">Appreciate Tunnel? <br>Please spend a minute of your time on the <u>Tunnel survey</u>.</span>
+	</div>
+	<div id="grid"><div class="grid-close" onclick="clearInterval(gridInterval);gridInterval=null;this.parentElement.remove();">&times;</div>
+		<!-- JavaScript will populate this grid -->
+	</div>
+
+	<script>
+		const batteryPercentageElem = document.getElementById("battery-percentage");
+		const batteryChargingElem = document.getElementById("battery-charging");
+		const batteryIconElem = document.getElementById("battery-icon");
+		const timeDisplayElem = document.getElementById("time");
+
+		function getCurrentTime() {
+			var currentTime = new Date();
+			var hours = currentTime.getHours();
+			var minutes = currentTime.getMinutes();
+			var ampm = hours >= 12 ? 'PM' : 'AM';
+			hours = hours % 12;
+			hours = hours ? hours : 12;
+			minutes = minutes < 10 ? '0' + minutes : minutes;
+			var timeString = hours + ':' + minutes + ' ' + ampm;
+			return timeString;
+		}
+		timeDisplayElem.innerHTML = getCurrentTime();
+
+		var timeClock = setInterval(function () {
+			timeDisplayElem.innerHTML = getCurrentTime();
+		}, 60000);
+
+		function monitorBattery() {
+			function updateBatteryStatus(battery) {
+				const batteryPercent = battery.level * 100;
+				const batteryCharging = battery.charging;
+
+				if (batteryPercent <= 10) {
+					batteryIconElem.className = 'fa-solid fa-battery-empty';
+				} else if (batteryPercent <= 25) {
+					batteryIconElem.className = 'fa-solid fa-battery-quarter';
+				} else if (batteryPercent <= 50) {
+					batteryIconElem.className = 'fa-solid fa-battery-half';
+				} else if (batteryPercent <= 75) {
+					batteryIconElem.className = 'fa-solid fa-battery-three-quarters';
+				} else if (batteryPercent <= 100) {
+					batteryIconElem.className = 'fa-solid fa-battery-full';
+				}
+
+				batteryPercentageElem.innerHTML = batteryPercent;
+				batteryChargingElem.style.display = batteryCharging ? "inline" : "none";
+			}
+
+			if ('getBattery' in navigator || 'battery' in navigator) {
+				navigator.getBattery().then(function (battery) {
+					battery.addEventListener('chargingchange', function () {
+						updateBatteryStatus(battery);
+					});
+					battery.addEventListener('levelchange', function () {
+						updateBatteryStatus(battery);
+					});
+					updateBatteryStatus(battery);
+				});
+			} else {
+				console.log("Battery Status API not supported");
+			}
+		}
+
+monitorBattery();
+
+
+		monitorBattery();
+	</script>
+	<script>
+		const snakeContainer = document.getElementById('snake-container');
+		const GRID_SIZE = 20;
+		const INITIAL_SPEED = 150; // milliseconds
+		let snake = [{ x: 10, y: 10 }];
+		let food = { x: 5, y: 5 };
+		let dx = 0;
+		let dy = 0;
+		let snakeGameSpeed = INITIAL_SPEED;
+		let snakeActive = false;
+		let snakeGameInterval;
+		function createGrid() {
+			const topRowElement = document.createElement('div');
+			topRowElement.classList.add('snake-row');
+			topRowElement.innerHTML = ">&nbsp;" + "__".repeat(GRID_SIZE);
+			snakeContainer.appendChild(topRowElement);
+			for (let row = 0; row < GRID_SIZE; row++) {
+				const rowElement = document.createElement('div');
+				rowElement.classList.add('snake-row');
+				rowElement.innerHTML = "><b>⎹</b>";
+				snakeContainer.appendChild(rowElement);
+				for (let col = 0; col < GRID_SIZE; col++) {
+					const cell = document.createElement('div');
+					cell.classList.add('snake-cell');
+					cell.id = `snake-cell-${row}-${col}`;
+					rowElement.appendChild(cell);
+				}
+				rowElement.innerHTML += "<b>⎸</b>";
+			}
+			const bottomRowElement = document.createElement('div');
+			bottomRowElement.classList.add('snake-row');
+			bottomRowElement.innerHTML = ">&nbsp;" + "‾‾".repeat(GRID_SIZE);
+			snakeContainer.appendChild(bottomRowElement);
+		}
+		function renderSnake() {
+			snake.forEach(segment => {
+				const segmentElement = document.getElementById(`snake-cell-${segment.y}-${segment.x}`);
+				segmentElement.classList.add('snake-segment');
+				//document.getElementById(`cell-${snake[0].y}-${snake[0].x}`).className = ("cell snake-segment");
+				document.getElementById(`snake-cell-${snake[0].y}-${snake[0].x}`).className = ((dx == 0 && dy == -1) ? "up" : (dx == 0 && dy == 1) ? "down" : (dx == -1 && dy == 0) ? "sleft" : (dx == 1 && dy == 0) ? "right" : "undefined") + " snake-cell snake-segment snake-head";
+			});
+		}
+		function clearSnake() {
+			const snakeSegments = document.querySelectorAll('.snake-segment');
+			snakeSegments.forEach(segment => {
+				segment.classList.remove("snake-segment");
+				segment.classList.remove("snake-head");
+			});
+		}
+		function renderFood() {
+			const foodElement = document.getElementById(`snake-cell-${food.y}-${food.x}`);
+			foodElement.classList.add('food');
+		}
+		function clearFood() {
+			const foodElement = document.querySelector('.food');
+			if (foodElement) {
+				foodElement.classList.remove('food');
+			}
+		}
+		function moveSnake() {
+			const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+			snake.unshift(head);
+			// Warp the snake when it hits the boundary
+			if (head.x < 0) head.x = GRID_SIZE - 1;
+			if (head.x >= GRID_SIZE) head.x = 0;
+			if (head.y < 0) head.y = GRID_SIZE - 1;
+			if (head.y >= GRID_SIZE) head.y = 0;
+			if (head.x === food.x && head.y === food.y) {
+				clearFood();
+				createFood();
+				snakeGameSpeed -= 10;
+			} else {
+				snake.pop();
+			}
+		}
+		function createFood() {
+			const x = Math.floor(Math.random() * GRID_SIZE);
+			const y = Math.floor(Math.random() * GRID_SIZE);
+			food = { x, y };
+		}
+		function checkCollision() {
+			const head = snake[0];
+			return snake.slice(1).some(segment => segment.x === head.x && segment.y === head.y);
+		}
+		function resetSnake() {
+			clearInterval(snakeGameInterval);
+			snakeGameInterval = null;
+			snake = [{ x: 10, y: 10 }];
+			dx = 0;
+			dy = 0;
+			snakeGameSpeed = INITIAL_SPEED;
+			clearSnake();
+			clearFood();
+		}
+
+		function startSnake() {
+			renderSnake();
+			createFood();
+			snakeGameInterval = setInterval(snakeGameLoop, snakeGameSpeed);
+		}
+
+		function snakeGameLoop() {
+			clearSnake();
+			moveSnake();
+			renderSnake();
+			renderFood();
+			if (checkCollision()) {
+				resetSnake();
+				snakeContainer.style.display = "none";
+				setTimeout(function(){
+					print("Game over. You touched your tail.");
+					print();
+					input(">");
+				}, 0);
+				if (document.getElementById("commandLineInput")) {
+					document.getElementsByClassName("line")[document.getElementsByClassName("line").length - 1].textContent += document.getElementById("commandLineInput").value;
+					document.getElementsByClassName("line")[document.getElementsByClassName("line").length - 1].innerHTML = "Press enter to close game><br>";
+					document.getElementById("commandLineInput").remove();
+				}
+				return;
+			}
+		}
+		document.addEventListener('keydown', e => {
+			switch (e.key) {
+				case 'ArrowUp':
+					if (dy !== 1) {
+						dx = 0;
+						dy = -1;
+					}
+					break;
+				case 'ArrowDown':
+					if (dy !== -1) {
+						dx = 0;
+						dy = 1;
+					}
+					break;
+				case 'ArrowLeft':
+					if (dx !== 1) {
+						dx = -1;
+						dy = 0;
+					}
+					break;
+				case 'ArrowRight':
+					if (dx !== -1) {
+						dx = 1;
+						dy = 0;
+					}
+					break;
+			}
+		});
+		createGrid();
+	</script>
+	<script>
+		const maze = document.getElementById('maze');
+		let mazeCells = [];
+		const numRows = 32;
+		const numCols = 32;
+		const edgeIndices = getEdgeIndices();
+		let startCellIndex = 0;
+		let endCellIndex = numRows * numCols - 1;
+		var setStart = false;
+		var setEnd = false;
+		
+		// Create grid mazeCells
+		for (let i = 0; i < numRows * numCols; i++) {
+			const mazeCell = document.createElement('span');
+			mazeCell.classList.add('maze-cell');
+			if (i == startCellIndex) {
+				mazeCell.classList.add('maze-start');
+			} else if (i == endCellIndex) {
+				mazeCell.classList.add('maze-end');
+			}
+			mazeCell.addEventListener('mousedown', () => {
+			if (maze.style.display != "none") {
+				if (setStart == true) {
+					setStartPoint(mazeCell);
+					setStart = false;
+					setEnd = false;
+					document.body.className = "";
+				} else if (setEnd == true) {
+					setEndPoint(mazeCell);
+					setStart = false;
+					setEnd = false;
+					document.body.className = "";
+				} else {
+					toggleWall(mazeCell);
+				}
+				erasePath();
+				}
+			});
+			mazeCell.addEventListener('mouseover', (event) => {
+				if (maze.style.display != "none") {
+					if (event.buttons === 1) {
+						if (setStart == true) {
+							setStartPoint(mazeCell);
+							setStart = false;
+							setEnd = false;
+							document.body.className = "";
+						} else if (setEnd == true) {
+							setEndPoint(mazeCell);
+							setStart = false;
+							setEnd = false;
+							document.body.className = "";
+						} else {
+							toggleWall(mazeCell);
+						}
+					}
+				}
+			});
+			mazeCells.push(mazeCell);
+			maze.appendChild(mazeCell);
+		}
+		
+		// Function to set the start or end point
+		function setStartPoint(mazeCell) {
+			const index = mazeCells.indexOf(mazeCell);
+			if (!mazeCell.classList.contains('maze-wall')) {
+				if (!mazeCell.classList.contains('maze-start')) {
+					if (!mazeCell.classList.contains('maze-end')) {
+						if (startCellIndex !== index && endCellIndex !== index) {
+							mazeCells[startCellIndex].classList.remove('maze-start');
+							startCellIndex = index;
+							mazeCell.classList.add('maze-start');
+						}
+					}
+				}
+			} else {
+				print("The starting position cannot be inside a wall.");
+			}
+		}
+		
+		function setEndPoint(mazeCell) {
+			const index = mazeCells.indexOf(mazeCell);
+			if (!mazeCell.classList.contains('maze-wall')) {
+				if (!mazeCell.classList.contains('maze-start')) {
+					if (!mazeCell.classList.contains('maze-end')) {
+						if (startCellIndex !== index && endCellIndex !== index) {
+							mazeCells[endCellIndex].classList.remove('maze-end');
+							endCellIndex = index;
+							mazeCell.classList.add('maze-end');
+						}
+					}
+				}
+			} else {
+				print("The ending position cannot be inside a wall.");
+			}
+		}
+		
+		function generateMaze() {
+				erasePath();
+		
+				// Initialize maze grid
+				const maze = Array.from({ length: numRows }, () => Array(numCols).fill(true));
+		
+				// Initialize starting point
+				const startRow = Math.floor(Math.random() * numRows);
+				const startCol = Math.floor(Math.random() * numCols);
+				maze[startRow][startCol] = false;
+		
+				const frontier = [{ row: startRow, col: startCol }];
+		
+				while (frontier.length) {
+						const randomIndex = Math.floor(Math.random() * frontier.length);
+						const current = frontier[randomIndex];
+						frontier.splice(randomIndex, 1);
+		
+						const neighbors = [
+								{ row: current.row - 2, col: current.col },
+								{ row: current.row + 2, col: current.col },
+								{ row: current.row, col: current.col - 2 },
+								{ row: current.row, col: current.col + 2 },
+						].filter(neighbor => neighbor.row >= 0 && neighbor.row < numRows && neighbor.col >= 0 && neighbor.col < numCols);
+		
+						for (const neighbor of neighbors) {
+								if (maze[neighbor.row][neighbor.col]) {
+										maze[current.row + (neighbor.row - current.row) / 2][current.col + (neighbor.col - current.col) / 2] = false;
+										maze[neighbor.row][neighbor.col] = false;
+										frontier.push(neighbor);
+								}
+						}
+				}
+		
+				// Apply walls based on the generated maze
+				mazeCells.forEach((mazeCell, index) => {
+						const row = Math.floor(index / numCols);
+						const col = index % numCols;
+						if (maze[row][col]) {
+								mazeCell.classList.add('maze-wall');
+						} else {
+								mazeCell.classList.remove('maze-wall');
+						}
+						if (index == startCellIndex) {
+							mazeCell.classList.remove('maze-wall');
+						} else if (index == endCellIndex) {
+							mazeCell.classList.remove('maze-wall');
+						}
+				});
+		}
+		
+				
+		function clearMaze() {
+			// Create grid mazeCells
+			for (let i = 0; i < numRows * numCols; i++) {
+				maze.children[i].classList.remove("maze-cell", "maze-path", "maze-wall");
+			}
+		}
+		
+		function erasePath() {
+			// Create grid mazeCells
+			for (let i = 0; i < numRows * numCols; i++) {
+				maze.children[i].classList.remove('maze-path');
+			
+			}
+		}
+
+		// A* Maze solving function
+		function solveMaze() {
+			resetMaze();
+			let solutionFound = false;
+
+			solutionFound = findPath(startCellIndex, endCellIndex);
+
+			if (!solutionFound) {
+				print('No solution found. Try moving the starting or ending point.');
+			}
+		}
+
+		function findPath(start, end) {
+			const visited = new Array(numRows * numCols).fill(false);
+			const queue = [{ index: start, path: [] }];
+
+			while (queue.length > 0) {
+				const { index, path } = queue.shift();
+
+				if (index === end) {
+					highlightPath(path);
+					return true;
+				}
+
+				if (!visited[index]) {
+					visited[index] = true;
+					const neighbors = getNeighbors(index);
+					for (const neighbor of neighbors) {
+						if (!visited[neighbor] && !mazeCells[neighbor].classList.contains('maze-wall')) {
+							queue.push({ index: neighbor, path: [...path, index] });
+						}
+					}
+				}
+			}
+
+			return false;
+		}
+
+		function getEdgeIndices() {
+			const edgeIndices = [];
+
+			for (let i = 0; i < numRows; i++) {
+				edgeIndices.push(i * numCols); // Left edge
+				edgeIndices.push((i + 1) * numCols - 1); // Right edge
+			}
+
+			for (let j = 1; j < numCols - 1; j++) {
+				edgeIndices.push(j); // Top edge
+				edgeIndices.push((numRows - 1) * numCols + j); // Bottom edge
+			}
+
+			return edgeIndices;
+		}
+
+		function getNeighbors(index) {
+			const neighbors = [];
+			const row = Math.floor(index / numCols);
+			const col = index % numCols;
+
+			if (row > 0) neighbors.push(index - numCols); // Top
+			if (row < numRows - 1) neighbors.push(index + numCols); // Bottom
+			if (col > 0) neighbors.push(index - 1); // Left
+			if (col < numCols - 1) neighbors.push(index + 1); // Right
+
+			return neighbors;
+		}
+
+		function highlightPath(path) {
+			for (const index of path) {
+				mazeCells[index].classList.add('maze-path');
+			}
+			mazeCells[startCellIndex].classList.add('maze-start');
+			mazeCells[endCellIndex].classList.add('maze-end');
+		}
+
+		function resetMaze() {
+			mazeCells.forEach(mazeCell => {
+				mazeCell.classList.remove('maze-path');
+			});
+		}
+
+		function toggleWall(mazeCell) {
+			if (!mazeCell.classList.contains("maze-start") && !mazeCell.classList.contains("maze-end")) {
+				mazeCell.classList.toggle('maze-wall');
+			} else {
+				print("You cannot put a wall where the starting or ending position is.");
+			}
+		}
+	</script>
+		<script>
+		const commandLine = document.getElementById("commandLine");
+		const caret = document.getElementById("textcaret");
+		const version = "7.0.7";
+
+		var commands = [
+			[
+				["cloak", "open", "url", "ab"],
+				function () {
+					customInput("Enter URL: ").addEventListener("keyup", function () {
+						if (event.keyCode == 13) {
+							if (this.value.startsWith("https://")) {
+								blank(this.value);
+								print();
+								input(">");
+							} else {
+								blank("https://" + this.value);
+								print();
+								input(">");
+							}
+						}
+					});
+				}
+			],
+			[
+				["game", "play"],
+				function () {
+					if (arguments[0].length > 1) {
+						if (arguments[0][1] == "snake") {
+							resetSnake();
+							print().after(snakeContainer);
+							snakeContainer.style.display = "";
+							startSnake();
+							print("Instructions: ");
+							print("Control the snake with the arrow keys.");
+							print("Do not touch your tail, or you will die.");
+							print();
+							customInput("Press ESC to close game>")
+							var gameEventHandler = function () {
+								if (event.keyCode == 27) {
+									resetSnake();
+									print("Exiting game and entering regular command line . . . ");
+									print();
+									snakeContainer.style.display = "none";
+									input(">");
+									window.removeEventListener("keyup", gameEventHandler);
+								}
+							}
+							window.addEventListener("keyup", gameEventHandler);
+						} else if (arguments[0][1] == "maze") {
+							print().after(maze);
+							maze.style.display = "";
+							print("Instructions: ");
+							print("Drag your mouse across the canvas to create a maze.");
+							print("Press the C key to clear the maze.");
+							print("Press the G key to generate a maze randomly.");
+							print("Press the Enter key to solve the maze.");
+							print("Press the S key to set a starting position for the pathfinder.");
+							print("Press the E key to set a ending position for the pathfinder.");
+							print();
+							customInput("Press ESC to close game>", 27);
+							var gameEventHandler = function () {
+								if (event.keyCode == 27) {
+									print("Exiting game and entering regular command line . . . ");
+									print();
+									maze.style.display = "none";
+									input(">");
+									window.removeEventListener("keyup", gameEventHandler);
+								} else if (event.keyCode == 67) {
+									clearMaze();
+								} else if (event.keyCode == 71) {
+									generateMaze();
+								} else if (event.keyCode == 13) {
+									solveMaze();
+								} else if (event.keyCode == 83) {
+									document.body.className = 'selectPoint';
+									setStart = true;
+									setEnd = false;
+								} else if (event.keyCode == 69) {
+									document.body.className = 'selectPoint';
+									setStart = false;
+									setEnd = true;
+								}
+							}
+							window.addEventListener("keyup", gameEventHandler);
+						} else if (arguments[0][1] == "help") {
+							print("GAME HELP\t\t\tProvides a list of all games and a short description.");
+							print("GAME SNAKE\t\t\tThe snake game.");
+							print("GAME MAZE\t\t\tA maze creator with a pathfinding algorithm");
+							print();
+							input(">")
+						} else {
+							print(`'${arguments[0][1]}' is not a valid game.`);
+							print();
+							input(">");
+						}
+					} else {
+						print("GAME HELP\t\t\tProvides a list of all games and a short description.");
+						print("GAME SNAKE\t\t\tThe snake game.");
+						print("GAME MAZE\t\t\tA maze creator with a pathfinding algorithm");
+						print();
+						input(">")
+					}
+				}
+			],
+			[
+				["guide"],
+				function () {
+					switchPage(3);
+					print();
+					input(">");
+				}
+			],
+			[
+				["help", "info"],
+				function () {
+					if (arguments[0].length == 1) {
+						console.log(arguments);
+						print("For more information on a specific command, type HELP [command].");
+						print("CLOAK\t\t\tOpens a cloaked tab.");
+						print("GAME\t\t\tPlays a game right here in the command line. \n\t\t\t\tType HELP GAME for more info.\n");
+						print("GUIDE\t\t\tOpens the guide.");
+						print("HELP\t\t\tProvides information for commands.");
+						print("PIPED\t\t\tOpens the specified Piped ID.");
+						print("PROXYINFO\t\tLists all the proxies and their respective information.");
+						print("PROXY\t\t\tOpens the specified proxy ID.");
+						print("VER\t\t\t\tProvides the current version of Tunnel.");
+						print();
+						input(">");
+					} else {
+						var commandDescriptions = [
+							["cloak", "Typing this command will provide an input to open a website without logging it in your search history. \nParameter(s): URL. \nAlias(es): CLOAK, OPEN, URL, AB."],
+							["game", "Typing this command will open a game displaying in the command line. \nType GAME HELP for a list of games. \nParameter(s): Game, HELP. \nAlias(es): GAME, PLAY."],
+							["guide", "Typing this command will open the user guide in the left-hand side. \nParameter(s): None. \nAlias(es): None."],
+							["help", "Typing this command alone will provide a list of commands, or provide help on a specific command. \nParameter(s): Command. \nAlias(es): HELP, INFO."],
+							["piped", "Typing this command will provide an input to open Piped, a YouTube alternative. \nParameter(s): Number. \nAlias(es): PIPED, YOUTUBE."],
+							["proxyinfo", "Typing this command will provide a list of proxies and provide stats about them. \nParameter(s): None. \nAlias(es): PROXYINFO, PROXIES, PROXYHELP, PROXYLIST."],
+							["proxy", "Typing this command will provide an input to open a proxy. \nParameter(s): Number. \nAlias(es): None."],
+							["ver", "Typing this command will provide the current version of Tunnel in the command line. \nParameter(s): None. \nAlias(es): VER, VERSION."]
+						];
+						for (i = 0; i < commands.length; i++) {
+							if (commands[i][0].includes(arguments[0][1])) {
+								commandDescription = commandDescriptions[i][1];
+							}
+						}
+						print(commandDescription);
+						print();
+						input(">");
+					}
+				}
+			],
+			[
+				["piped", "youtube", "yt"],
+				function () {
+					customInput("Enter Piped ID: ").addEventListener("keyup", function () {
+						if (event.keyCode == 13) {
+							if (isNaN(Number(this.value)) != true) {
+								if (Number(this.value) >= 0 && Number(this.value) <= YTURLs.length-1) {
+									launchYTID(Number(this.value));
+								} else {
+									print(`The ID must be between 0 and ${YTURLs.length-1}.`);
+								}
+							} else {
+								print("The ID must be a number.");
+							}
+							print();
+							input(">");
+						}
+					});
+				}
+			],
+			[
+				["proxyinfo", "proxies", "proxyhelp", "proxylist"],
+				function () {
+					switchPage(4);
+					print();
+					input(">");
+				}
+			],
+			[
+				["proxy"],
+				function () {
+					customInput("Enter proxy ID: ").addEventListener("keyup", function () {
+						if (event.keyCode == 13) {
+							if (isNaN(Number(this.value)) != true) {
+								if (Number(this.value) >= 0 && Number(this.value) <= PROXYURLs.length-1) {
+									launchProxyID(Number(this.value));
+								} else {
+									print(`The ID must be between 0 and ${PROXYURLs.length-1}.`);
+								}
+							} else {
+								print("The ID must be a number.");
+							}
+							print();
+							input(">");
+						}
+					});
+				}
+			],
+			[
+				["ver", "version"],
+				function () {
+					print();
+					print(`Tunnel [Version ${version}]`);
+					print("A tool for avoiding internet censorship.");
+					print();
+					input(">");
+				}
+			],
+		];
+			
+		function print(text="") {
+			text = text.toString();
+			const line = document.createElement("span");
+			// if (document.getElementById("commandLineInput")) {
+			// 	document.getElementById("commandLineInput").parentElement.innerHTML = document.getElementById("commandLineInput").parentElement.textContent + document.getElementById("commandLineInput").value + "<br>";
+			// }
+			line.className = "line";
+			line.innerHTML = text.replaceAll("\n", "<br>") + "<br>";
+			commandLine.appendChild(line);
+			return line;
+		}
+
+		function input(text="") {
+			text = text.toString();
+			const line = document.createElement("span");
+			line.className = "line";
+			line.innerHTML = text.replaceAll("\n", "<br>");
+			const inputter = document.createElement("input");
+			inputter.type = "text";
+			inputter.id = "commandLineInput";
+			inputter.className = "input";
+			inputter.setAttribute("autocorrect", "off");
+			inputter.setAttribute("autocomplete", "off");
+			inputter.setAttribute("spellcheck", "false");
+			inputter.addEventListener("keyup", function () {
+				if (event.keyCode == 13) {
+					var command = (this.value).trimStart().split(" ");
+					if (command[0].trim() != "") {
+						var commandInfo = function () {
+							var includes = false;
+							var toRun = null;
+							for (var i = 0; i < commands.length; i++) {
+								if (commands[i][0].includes(command[0].toLowerCase())) {
+									includes = true;
+									toRun = commands[i][1];
+								}
+							}
+							return [includes, toRun];
+						}();
+						if (commandInfo[0] == true) {
+							commandInfo[1](command);
+						} else {
+							print(`'${command[0]}' is not recognized as a valid command.`);
+							print();
+							input(">");
+						}
+						line.textContent += this.value;
+						line.innerHTML += "<br>";
+						this.remove();
+					} else {
+						line.textContent += this.value;
+						line.innerHTML += "<br>";
+						this.remove();
+						input(">");
+					}
+				}
+			});
+			line.appendChild(inputter);
+			commandLine.appendChild(line);
+			inputter.focus();
+			return inputter;
+		}
+
+		function customInput(text="", closingID=13) {
+			text = text.toString();
+			const line = document.createElement("span");
+			line.className = "line";
+			line.innerHTML = text.replaceAll("\n", "<br>");
+			const inputter = document.createElement("input");
+			inputter.type = "text";
+			inputter.id = "commandLineInput";
+			inputter.className = "input";
+			inputter.setAttribute("autocorrect", "off");
+			inputter.setAttribute("autocomplete", "off");
+			inputter.setAttribute("spellcheck", "false");
+			inputter.addEventListener("keyup", function () {
+				if (event.keyCode == closingID) {
+					setTimeout(function () {
+						line.textContent += inputter.value;
+						line.innerHTML += "<br>";
+						inputter.remove();
+					}, 0);
+				}
+			});
+			line.appendChild(inputter);
+			commandLine.appendChild(line);
+			inputter.focus();
+			return inputter;
+		}
+
+		print(`Tunnel [Version ${version}]`);
+		print("(c) arcade-smasher. All rights reserved.\n");
+
+		input(">")
+	</script>
+	<script>
+		// var PROXYURLs = [
+		// 	"https://sodium.onrender.com/",
+		// 	"https://metallic.eu.org/",
+		// 	"https://statistics.geyikler.com/",
+		// 	"https://serrcosswilsonmallcreepscensions0phunky.eithermouse.com/",
+		// 	"https://nebus.mathewparkin.com/",
+		// 	"https://myown123.streetdirectory.sg/",
+		// 	"https://messi.mctwisted.pro/",
+		// 	"https://1800history.gotroot.pw/",
+		// 	"https://1700history.gotroot.pw/",
+		// 	"https://1600history.gotroot.pw/",
+		// 	"https://fisdinstructure.gotroot.pw/",
+		// 	"https://jeo.todotrabajo.ar/",
+		// 	"https://jeo5.todotrabajo.ar/",
+		// 	"https://jeo4.todotrabajo.ar/",
+		// 	"https://jeo3.todotrabajo.ar/",
+		// 	"https://jeo2.todotrabajo.ar/",
+		// 	"https://jeo4.subcetatecity.ro/",
+		// 	"https://jeo3.subcetatecity.ro/",
+		// 	"https://jeo2.subcetatecity.ro/",
+		// 	"https://jeo.subcetatecity.ro/",
+		// 	"https://jeo.robot-agachado.org/",
+		// 	"https://jeo4.goldsoft.rs/",
+		// 	"https://jeo3.goldsoft.rs/",
+		// 	"https://jeo2.goldsoft.rs/",
+		// 	"https://jeo.goldsoft.rs/",
+		// 	"https://ixl.plus/",
+		// 	"https://todo.mathnotes.help/"
+		// ];
+
+		var PROXYURLs = {
+			array: [
+				{
+					links: [
+						"https://financial.tripreceipts.com",
+						"https://e.ilosno.cl",
+						"https://khanacademy.port0.org",
+						"https://educationalmathapps.khabbaby.com",
+						"https://graphingcalculators.telugumaster.com"
+					],
+					name: "Interstellar",
+					games: "High",
+					speed: "Normal"
+				},
+				{
+					links: [
+						"https://metallic.eu.org/"
+					],
+					name: "Metallic",
+					games: "Broken",
+					speed: "Fast"
+				},
+				{
+					links: [
+						"https://ixllearning.minecraft.pe/",
+						"https://readingwriting.fairuse.org/",
+						"https://shadow.curesoutpost.com/"
+					],
+					name: "Shadow Tabbed",
+					games: "N/A",
+					speed: "Super Fast"
+				},
+				{
+					links: [
+						"https://astroidv3.curesoutpost.com",
+						"https://roblox.vyper.group",
+						"https://integrals.edumath.nl"
+					],
+					name: "Astroid",
+					games: "High",
+					speed: "Slow"
+				},
+				{
+					links: [
+						"https://ixl.plus/",
+						"https://todo.mathnotes.help/",
+						"https://art.curesoutpost.com",
+						"https://learn.artclass.lol"
+					],
+					name: "Artclass",
+					games: "High",
+					speed: "Normal"
+				}
+			]
+		};
+
+		PROXYURLs.length = function () {
+			var result = 0;
+			for (i = 0; i < PROXYURLs.array.length; i++) {
+				result += PROXYURLs.array[i].links.length;
+			}
+			return result;
+		}();
+
+		var r = [];
+		PROXYURLs.array.forEach(function(proxy) {
+			r.push(...proxy.links);
+		});
+		PROXYURLs.all = r;
+		var iteratorStart = 0;
+		var iteratorEnd = 0;
+		var result = [];
+		for (var i = 0; i < PROXYURLs.array.length; i++) {
+			iteratorEnd = iteratorStart + PROXYURLs.array[i].links.length - 1;
+			result.push(...PROXYURLs.array[i].links);
+			document.getElementById("main4").innerHTML += `
+				<h2>${(iteratorStart)}${(iteratorStart !== iteratorEnd ? ` - ${iteratorEnd}` : "")}</h2>
+				Name: ${PROXYURLs.array[i].name}<br>
+				Game count: <i class="fa-solid fa-gamepad"></i> ${PROXYURLs.array[i].games}<br>
+				Speed: ${PROXYURLs.array[i].speed.toLowerCase().includes("slow") ? `<i class="fa-solid fa-gauge-high fa-flip-horizontal"></i>` : PROXYURLs.array[i].speed.toLowerCase().includes("normal") ? `<i class="fa-solid fa-gauge"></i>` : PROXYURLs.array[i].speed.toLowerCase().includes("fast") ? `<i class="fa-solid fa-gauge-high"></i>` : `<i class="fa-solid fa-gauge"></i>`} ${PROXYURLs.array[i].speed}<br><br>
+			`;
+			iteratorStart += PROXYURLs.array[i].links.length;
+		}
+
+
+
+		var YTURLs = [
+			"https://pipedapi.r4fo.com/",
+			"https://pipedapi.smnz.de/",
+			"https://pipedapi.adminforge.de/",
+			"https://pipedapi.astartes.nl/",
+			"https://piapi.ggtyler.dev/",
+			"https://pipedapi.12a.app/",
+			"https://piped.curesoutpost.com"
+		];
+
+		document.getElementById("proxyInput").placeholder = `Enter proxy ID (0-${PROXYURLs.length - 1})`;
+		document.getElementById("proxyInput").max = PROXYURLs.length;
+		document.getElementById("YTInput").placeholder = `Enter Piped ID (0-${YTURLs.length - 1})`;
+		document.getElementById("YTInput").max = YTURLs.length;
+
+		function confirmURL() {
+			const url = document.getElementById("urlInput").value;
+			document.getElementById("urlInput").disabled = true;
+			document.getElementById("launch").removeAttribute("disabled");
+			document.getElementById("changeUrl").style.removeProperty("display");
+			document.getElementById("confirm").style.display = "none";
+		}
+
+		document.getElementById("confirm").addEventListener("click", confirmURL);
+		document.getElementById("urlInput").addEventListener("keydown", function (event) {
+			if (event.key === "Enter") {
+				confirmURL();
+				setTimeout(function () {document.getElementById("launch").focus()});
+			}
+		});
+
+		function confirmProxy() {
+			const ID = document.getElementById("proxyInput").value;
+			if (ID >= 0 && ID <= PROXYURLs.length - 1 && ID !== "") {
+				document.getElementById("proxyInput").disabled = true;
+				document.getElementById("launchProxyID").removeAttribute("disabled");
+				document.getElementById("changeProxyID").style.removeProperty("display");
+				document.getElementById("confirmProxyID").style.display = "none";
+			} else {
+				alert(`Unable to confirm ID. Please make sure it is between 0 and ${PROXYURLs.length - 1}.`)
+			}
+		}
+	
+		document.getElementById("confirmProxyID").addEventListener("click", confirmProxy);
+		document.getElementById("proxyInput").addEventListener("keydown", function (event) {
+			if (event.key === "Enter") {
+				confirmProxy();
+				setTimeout(function () {document.getElementById("launchProxyID").focus()});
+			}
+		});
+
+		function confirmYT() {
+			const ID = document.getElementById("YTInput").value;
+			if (ID >= 0 && ID <= YTURLs.length - 1 && ID !== "") {
+				document.getElementById("YTInput").disabled = true;
+				document.getElementById("launchYTID").removeAttribute("disabled");
+				document.getElementById("changeYTID").style.removeProperty("display");
+				document.getElementById("confirmYTID").style.display = "none";
+			} else {
+				alert(`Unable to confirm ID. Please make sure it is between 0 and ${YTURLs.length - 1}.`)
+			}
+		}
+
+		document.getElementById("confirmYTID").addEventListener("click", confirmYT);
+		document.getElementById("YTInput").addEventListener("keydown", function (event) {
+			if (event.key === "Enter") {
+				confirmYT();
+				setTimeout(function () {document.getElementById("launchYTID").focus()});
+			}
+		});
+	
+		document.getElementById("launch").addEventListener("click", function() {
+			const url = document.getElementById("urlInput").value;
+			if (url.startsWith("https://") || url.startsWith("http://") || url.startsWith("file://")) {
+				blank(url);
+			} else {
+				blank("https://" + url);
+			}
+		});
+	
+		document.getElementById("launchProxyID").addEventListener("click", function() {
+			const ID = document.getElementById('proxyInput').value;
+			launchProxyID(ID);
+		});
+
+		document.getElementById("launchYTID").addEventListener("click", function() {
+			const ID = document.getElementById('YTInput').value;
+			launchYTID(ID);
+		});
+			
+		document.getElementById("changeUrl").addEventListener("click", function () { 
+			document.getElementById("urlInput").removeAttribute("disabled");
+			document.getElementById("launch").disabled = true;
+			document.getElementById("changeUrl").style.display = "none";
+			document.getElementById("confirm").style.removeProperty("display");
+		});
+	
+		document.getElementById("changeProxyID").addEventListener("click", function () {
+			document.getElementById("proxyInput").removeAttribute("disabled");
+			document.getElementById("launchProxyID").disabled = true;
+			document.getElementById("changeProxyID").style.display = "none";
+			document.getElementById("confirmProxyID").style.removeProperty("display");
+		});
+
+		document.getElementById("changeYTID").addEventListener("click", function () {
+			document.getElementById("YTInput").removeAttribute("disabled");
+			document.getElementById("launchYTID").disabled = true;
+			document.getElementById("changeYTID").style.display = "none";
+			document.getElementById("confirmYTID").style.removeProperty("display");
+		});
+		
+		function launchProxyID(ID) {
+			blank(PROXYURLs.all[ID]);
+		}
+
+		function launchYTID(ID) {
+			blank(YTURLs[ID]);
+		}
+	
+		function blank(url) {
+			const tab = window.open('about:blank', '_blank');
+			const iframe = tab.document.createElement('iframe');
+			const stl = iframe.style;
+			stl.border = stl.outline = 'none';
+			stl.width = '100vw';
+			stl.height = '100vh';
+			stl.position = 'fixed';
+			stl.left = stl.right = stl.top = stl.bottom = '0';
+			iframe.src = url;
+			tab.document.body.appendChild(iframe);
+		}
+		
+		function switchPage(page) {
+			for (i = 0; i < document.getElementsByClassName("document").length; i++) {
+				document.getElementsByClassName("document")[i].style.display = "none";
+			}
+			document.getElementById("main" + page.toString()).removeAttribute("style");
+		}
+	</script>
+	<script>
+		const rows = 24;
+		const cols = 16;
+		var chars = "aȧȧbcdððeƎƎʓʓ∑∑€€££fƒƒghijklƛƛmnoØØȢȢȯȯpþþq¶¶rs§§tuüüvwxyÿÿ¥¥zƺƺ▯▯▯▯▯{}{}$$$$&&~%[][][]…………";
+		const grid = document.getElementById('grid');
+
+		function drawGrid() {
+			for (let i = 0; i < rows; i++) {
+				const row = document.createElement('div');
+				row.className = "row";
+				for (let j = 0; j < cols; j++) {
+					const cell = document.createElement('div');
+					cell.id = `cell_${i}_${j}`;
+					cell.className = "cell";
+					cell.innerHTML = '▯';
+					row.appendChild(cell);
+				}
+				grid.appendChild(row);
+				grid.style.width = grid.getBoundingClientRect().width + "px";
+			}
+			return grid;
+		}
+		
+		function randomCoordinate() {
+			return [Math.floor(Math.random() * rows), Math.floor(Math.random() * cols)];
+		}
+
+		function randomCharacter() {
+			return chars[Math.floor(Math.random() * chars.length)];
+		}
+		
+		var target;
+		
+		document.addEventListener('mouseover', function(e){
+			target = e.target;
+		});
+		
+		function paintCell(x, y, character, actAsHovered=false) {
+			const cell = document.getElementById(`cell_${x}_${y}`);
+			if (cell) {
+				cell.innerHTML = character;
+				if (target == cell || actAsHovered == true) {
+					cell.style = "animation: fadeouthover 2s;";	
+				} else {
+					cell.style = "animation: fadeoutnormal 2s;";
+				}
+				setTimeout(function(){cell.style = "";}, 2000);
+			}
+			return {"cell": cell,
+					"hover": (target == cell)};
+		}
+		let gridInterval;
+		window.onload = function() {
+			drawGrid();
+			gridInterval = setInterval(function(){
+				var i = 0;
+				var coord = randomCoordinate();
+				var hoverLine = false;
+				var intervalID = setInterval(function(){
+					if (coord[1] + i > rows) {
+						clearInterval(intervalID);
+					} else {
+						cell = paintCell(coord[0]+i, coord[1], randomCharacter(), hoverLine);
+						if (cell.hover == true) {
+							hoverLine = true;
+						}
+					}
+					i++;
+				}, 50);
+				setTimeout(function(){
+					clearInterval(intervalID);
+				}, 699)
+			}, 70);
+			
+			let offsetX, offsetY;
+			let isDragging = false;
+			var minX = 0;
+			var maxX = window.innerWidth - grid.offsetWidth;
+			var minY = 21;
+			var maxY = window.innerHeight - grid.offsetHeight - 4;
+			grid.style.width = grid.getBoundingClientRect().width;
+			grid.style.height = grid.getBoundingClientRect().height;
+			grid.style.left = maxX + 'px';
+			grid.style.top = minY + 'px';
+
+			window.addEventListener('resize', function () {
+				maxX = window.innerWidth - grid.offsetWidth;
+				maxY = window.innerHeight - grid.offsetHeight - 4;
+				grid.style.left = (Math.min(Math.max(grid.offsetLeft, minX), maxX) / window.innerWidth * 100) + '%';
+				grid.style.top = (Math.min(Math.max(grid.offsetTop, minY), maxY) / window.innerHeight * 100) + '%';
+			})
+
+			grid.addEventListener('mousedown', function () {
+				isDragging = true;
+				offsetX = event.clientX - grid.getBoundingClientRect().left;
+				offsetY = event.clientY - grid.getBoundingClientRect().top;
+			});
+
+			document.addEventListener('mouseup', () => {
+				isDragging = false;
+			});
+
+			document.addEventListener('mousemove', function () {
+				if (isDragging) {
+					let x = event.clientX - offsetX;
+					let y = event.clientY - offsetY;
+
+					x = Math.min(Math.max(x, minX), maxX);
+					y = Math.min(Math.max(y, minY), maxY);
+
+					grid.style.left = (x / window.innerWidth * 100) + '%';
+					grid.style.top = (y / window.innerHeight * 100) + '%';
+				}
+			});
+		};
+</body>
+</html>
