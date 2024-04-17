@@ -12,4 +12,4 @@ All of the sites run through a proxy which lets you roam the internet freely wit
 
 ## Deploy to a cloud service
 [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/i1PwWo?referralCode=VdVuhE)
-[![Deploy to Vercel](https://binbashbanana.github.io/deploy-buttons/buttons/remade/vercel.svg)](https://vercel.com/new/clone?repository-url=https://github.com/Cure64/tunnel/tree/main)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FCure64%2Ftunnel)
