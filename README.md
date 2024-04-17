@@ -12,7 +12,4 @@ All of the sites run through a proxy which lets you roam the internet freely wit
 
 ## Deploy to a cloud service
 [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/i1PwWo?referralCode=VdVuhE)
-[![Deploy to Cyclic](https://binbashbanana.github.io/deploy-buttons/buttons/remade/cyclic.svg)](https://app.cyclic.sh/api/app/deploy/Cure64/tunnel)
-[![Deploy to Koyeb](https://binbashbanana.github.io/deploy-buttons/buttons/remade/koyeb.svg)](https://app.koyeb.com/deploy?type=git&repository=https://github.com/Cure64/tunnel/tree/main)
-[![Deploy to Render](https://binbashbanana.github.io/deploy-buttons/buttons/remade/render.svg)](https://render.com/deploy?repo=https://github.com/Cure64/tunnel/tree/main)
 [![Deploy to Vercel](https://binbashbanana.github.io/deploy-buttons/buttons/remade/vercel.svg)](https://vercel.com/new/clone?repository-url=https://github.com/Cure64/tunnel/tree/main)
