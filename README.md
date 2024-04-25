@@ -9,7 +9,7 @@ Tunnel launches sites in about:blank so your school or Work cannot see your hist
 
 All of the sites run through a proxy which lets you roam the internet freely without any restrictions
 
-#Why is their ads?
+# Why is their ads?
 
 Ads help keep tunnel free I have to pay for hosting and other costs if you want ad free tunnel just download the html version of it which is ad free
 
